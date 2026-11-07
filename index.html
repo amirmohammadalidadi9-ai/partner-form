@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>فرم درخواست پارتنر آینده</title>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+<div class="bar" role="tablist">
+  <button type="button" role="tab" aria-selected="true">صفحه ۱</button>
+  <button type="button" role="tab" aria-selected="false">صفحه ۲</button>
+</div>
+
+<form id="form" novalidate>
+  <section class="sheet" id="p0"></section>
+  <section class="sheet" id="p1" hidden></section>
+</form>
+
+<div class="actions">
+  <button type="button" class="alt" id="prev">صفحه قبل</button>
+  <button type="button" class="alt" id="next">صفحه بعد</button>
+  <button type="button" id="submit">ثبت درخواست</button>
+</div>
+
+<dialog id="dlg">
+  <h3>فرم شما</h3>
+  <div id="preview" class="paper"></div>
+  <div class="dlg-actions">
+    <button type="button" id="download" class="solid">دانلود فایل Word</button>
+    <button type="button" id="close" class="alt">بستن</button>
+  </div>
+</dialog>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var $ = function (id) { return document.getElementById(id); };
+
+  // تشخیص گوشی: روی گوشی به‌جای تب جدید، پنجرهٔ داخل همین صفحه باز می‌شود
+  var isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) ||
+    (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+
+  // t=text, e=email, p=tel, a=textarea, r=radio
+  var R = function (n, l, o, col) { return { k: 'r', n: n, l: l, o: o, col: col }; };
+  var T = function (n, l, k) { return { k: k || 't', n: n, l: l }; };
+  var A = function (n, l) { return { k: 'a', n: n, l: l }; };
+  var ynm = ['بله', 'نه', 'گاهی اوقات'];
+
+  var pages = [
+    { title: 'فرم درخواست پارتنر آینده', lead: 'این یک فرم درخواست رسمی پارتنر آینده است.', photo: true, secs: [
+      ['اطلاعات پایه', [
+        T('first', 'نام'), T('first2', 'نام اول'), T('last', 'نام خانوادگی'), T('email', 'ایمیل', 'e'),
+        T('phone', 'شماره تلفن', 'p'), T('sign', 'امضای ستاره شناس'),
+        R('home', 'کجا زندگی می‌کنی؟', ['با والدینم', 'با هم‌اتاقی(های)م', 'در خانه خودم', 'در خانه شخص دیگری'], true),
+        T('height', 'قد'), T('age', 'سن'), T('eye', 'رنگ چشم'), T('hair', 'رنگ مو')]],
+      ['تحصیلات و شغل', [
+        T('edu', 'بالاترین سطح تحصیلات شما چیست؟'), T('major', 'چه رشته‌ای تحصیل کردید؟'),
+        T('school', 'کجا تحصیل کردید؟'), T('employed', 'آیا شاغل هستید؟'),
+        T('salary', 'چقدر حقوق می‌گیرید؟'), T('job', 'مشغول به چه کاری هستید؟')]],
+      ['آشنایی با شما', [
+        T('hascar', 'آیا ماشین دارید؟'), T('drives', 'آیا رانندگی می‌کنید؟'),
+        T('religion', 'چه نوع دینی دارید؟'), T('cartype', 'چه نوع ماشینی رانندگی می‌کنید؟'),
+        R('drugs', 'آیا مواد مخدر مصرف می‌کنید؟', ynm), R('smoke', 'آیا سیگار می‌کشید؟', ynm),
+        T('bestfood', 'بهترین غذایی که می‌پزید چیست؟'),
+        R('toilet', 'آیا باید صندلی توالت را به سمت چپ قرار دهید؟', ['بالا', 'پایین', 'فرقی نمی‌کند']),
+        T('band', 'گروه موسیقی مورد علاقه:'), T('movie', 'فیلم مورد علاقه:')]]
+    ] },
+    { title: 'فرم درخواست پارتنر آینده', confirm: true, secs: [
+      ['سبک زندگی و عادت‌ها', [
+        T('hobbies', 'علاقه‌هات چیه؟'), T('workhours', 'چقدر ساعات کاری می‌کنی؟'),
+        T('spend', 'چی رو دوست داری خرج کنی؟'), T('sports', 'چه ورزش‌هایی انجام میدی؟'),
+        R('diet', 'چطور رژیم غذایی خودت رو توصیف می‌کنی؟', ['خیلی سالم', 'بیشتر سالم', 'متوسط', 'اصلاً سالم نیست'], true),
+        A('free', 'چطور می‌خوای زمان آزادت رو بگذرونی؟'),
+        R('travel', 'معمولاً در سفرها می‌ری؟', ['بله', 'نه']), T('place', 'کجا رو بیشتر دوست داری؟'),
+        R('alcohol', 'مصرف الکل؟', ynm),
+        R('pet', 'آیا دوست داری حیوان خانگی داشته باشی؟', ['بله', 'نه', 'شاید']),
+        T('petyes', 'اگه بله، چه حیوانی؟'), T('petno', 'اگه نه، چرا؟'),
+        A('party', 'چقدر اهل تفریح و مهمونی هستی؟'), A('leisure', 'چطور اوقات فراغتت رو می‌گذرونی؟')]],
+      ['شخصیت و ارزش‌ها', [
+        A('interests', 'به چه چیزهایی بیشتر علاقه داری؟'), A('friends', 'چطور دوستات تو رو توصیف می‌کنن؟'),
+        R('faith', 'تا چه حد به مذهب/باورهای مذهبی اهمیت میدی؟', ['خیلی زیاد', 'زیاد', 'متوسط', 'کم']),
+        A('relation', 'به دنبال چه نوع رابطه‌ای هستی؟'),
+        T('kind', 'مهربانی برات چقدر مهمه؟'), T('patience', 'صبر برات چقدر مهمه؟'),
+        T('family1', 'توجه به خانواده/ چقدر مهمه؟'), T('family2', 'توجه به خانواده چقدر مهمه؟'),
+        A('goals', 'اهدافت در زندگی چیه؟')]],
+      ['سؤالات نهایی', [
+        A('tell', 'آیا چیز خاصی هست که دوست داری بهم بگی؟'),
+        A('why', 'چرا فکر می‌کنی پارتر خوبی می‌تونی باشی؟'),
+        A('diff', 'چه چیزی تو رو از سایر متقاضی‌ها متفاوت می‌کنه؟')]]
+    ] }
+  ];
+
+  function esc(s) { return s.replace(/"/g, '&quot;'); }
+
+  function field(f) {
+    if (f.k === 'r') {
+      var opts = f.o.map(function (o) {
+        return '<label><input type="radio" name="' + f.n + '" value="' + esc(o) + '">' + o + '</label>';
+      }).join('');
+      return '<div class="f' + (f.col ? ' full' : '') + '"><span class="q">' + f.l +
+        '</span><div class="opts' + (f.col ? ' col' : '') + '">' + opts + '</div></div>';
+    }
+    if (f.k === 'a') {
+      return '<div class="f full"><label for="' + f.n + '">' + f.l +
+        '</label><textarea id="' + f.n + '" name="' + f.n + '" rows="3"></textarea></div>';
+    }
+    var type = { t: 'text', e: 'email', p: 'tel' }[f.k];
+    var extra = f.k === 'e' ? ' dir="ltr"' : (f.k === 'p' ? ' dir="ltr" inputmode="tel"' : '');
+    return '<div class="f"><label for="' + f.n + '">' + f.l + '</label><input type="' + type +
+      '" id="' + f.n + '" name="' + f.n + '"' + extra + '><span class="msg"></span></div>';
+  }
+
+  var cameraIcon = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 3 7.2 5H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3.2L15 3zm3 5a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>';
+
+  // build pages
+  pages.forEach(function (pg, i) {
+    var h = '<header><h1>' + pg.title + '</h1></header>';
+    if (pg.lead) h += '<p class="lead">' + pg.lead + '</p>';
+    if (pg.photo) {
+      h += '<div class="photo"><p>عکس درخواست شده باید شامل یک عکس باشد که برای این موقعیت در نظر گرفته شده است. این عکس باید اخیراً گرفته شده باشد (یعنی در ۶ ماه گذشته).</p>' +
+        '<label class="drop" id="drop"><input type="file" accept="image/*" name="photo" aria-label="بارگذاری عکس">' + cameraIcon + '</label></div>';
+    }
+    pg.secs.forEach(function (sec) {
+      h += '<h2><span>' + sec[0] + '</span></h2><div class="grid">' + sec[1].map(field).join('') + '</div>';
+    });
+    if (pg.confirm) {
+      h += '<div class="confirm"><p>من تأیید می‌کنم که تمام اطلاعات ارائه شده در این درخواست صادقانه و صادقانه است و بهترین دانش و توانایی‌های خود را به اشتراک گذاشته‌ام.</p>' +
+        '<div class="grid"><div class="f"><label for="signature">امضا:</label><input type="text" id="signature" name="signature"><span class="msg"></span></div>' +
+        '<div class="f"><label for="date">تاریخ:</label><input type="date" id="date" name="date"></div></div></div>';
+    }
+    $('p' + i).innerHTML = h;
+  });
+
+  // page switching
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.bar button'));
+  function show(n) {
+    [0, 1].forEach(function (i) { $('p' + i).hidden = (i !== n); });
+    tabs.forEach(function (b, i) { b.setAttribute('aria-selected', String(i === n)); });
+    $('prev').disabled = (n === 0);
+    $('next').disabled = (n === 1);
+    window.scrollTo(0, 0);
+  }
+  tabs.forEach(function (b, i) { b.onclick = function () { show(i); }; });
+  $('prev').onclick = function () { show(0); };
+  $('next').onclick = function () { show(1); };
+  show(0);
+
+  // photo preview
+  document.querySelector('#drop input').addEventListener('change', function (e) {
+    var file = e.target.files[0];
+    var box = $('drop');
+    var old = box.querySelector('img');
+    if (old) old.parentNode.removeChild(old);
+    if (!file || file.type.indexOf('image/') !== 0) return;
+    var img = new Image();
+    img.alt = 'عکس انتخاب‌شده';
+    img.src = URL.createObjectURL(file);
+    box.appendChild(img);
+  });
+
+  // ---- doc helpers start ----
+  function escH(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // محتوای فرم (هم برای پیش‌نمایش و هم برای فایل Word)
+  function buildBody(doc, photoSrc) {
+    var h = '<h1>فرم درخواست پارتنر آینده</h1>';
+    if (photoSrc) h += '<p style="text-align:center"><img src="' + photoSrc + '" width="150" alt=""></p>';
+    h += '<p style="text-align:center">تاریخ ثبت: ' + escH(doc.stamp) + '</p>';
+    doc.sections.forEach(function (sec) {
+      h += '<h2>' + escH(sec.title) + '</h2><table>';
+      sec.items.forEach(function (it) {
+        h += '<tr><td class="k">' + escH(it[0]) + '</td><td>' + escH(it[1]).replace(/\n/g, '<br>') + '</td></tr>';
+      });
+      h += '</table>';
+    });
+    return h;
+  }
+
+  function wordWrap(inner) {
+    return '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">' +
+      '<head><meta charset="utf-8"><title>فرم درخواست پارتنر آینده</title>' +
+      '<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->' +
+      '<style>' +
+      '@page { size: 21cm 29.7cm; margin: 2cm; }' +
+      'body { font-family: Tahoma, Arial, sans-serif; direction: rtl; font-size: 11pt; }' +
+      'h1 { text-align: center; font-size: 20pt; }' +
+      'h2 { font-size: 14pt; border-bottom: 1.5pt solid #333333; margin-top: 16pt; }' +
+      'table { border-collapse: collapse; width: 100%; }' +
+      'td { border: 1px solid #888888; padding: 5px 8px; vertical-align: top; }' +
+      'td.k { background: #eeeeee; width: 38%; font-weight: bold; }' +
+      '</style></head><body dir="rtl">' + inner + '</body></html>';
+  }
+
+  function toB64(str) {
+    var bytes = new TextEncoder().encode(str);
+    var bin = '';
+    for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin);
+  }
+
+  function chunk(b64) { return b64.replace(/.{1,76}/g, '$&\r\n'); }
+
+  // فایل MHTML که Word آن را به‌صورت سند (با عکس) باز می‌کند
+  function buildMhtml(html, photo) {
+    var b = '----=_NextPart_partnerform';
+    var out = 'MIME-Version: 1.0\r\n' +
+      'Content-Type: multipart/related; boundary="' + b + '"; type="text/html"\r\n\r\n' +
+      '--' + b + '\r\n' +
+      'Content-Type: text/html; charset="utf-8"\r\n' +
+      'Content-Transfer-Encoding: base64\r\n' +
+      'Content-Location: file:///C:/partner/form.htm\r\n\r\n' +
+      chunk(toB64(html)) + '\r\n';
+    if (photo) {
+      out += '--' + b + '\r\n' +
+        'Content-Type: image/jpeg\r\n' +
+        'Content-Transfer-Encoding: base64\r\n' +
+        'Content-Location: file:///C:/partner/photo.jpg\r\n\r\n' +
+        chunk(photo.base64) + '\r\n';
+    }
+    return out + '--' + b + '--';
+  }
+  // ---- doc helpers end ----
+
+  // اطلاعات پرشده را بر اساس بخش‌ها جمع می‌کند
+  function getVal(fm, f) {
+    if (f.k === 'r') {
+      var c = fm.querySelector('input[name="' + f.n + '"]:checked');
+      return c ? c.value : '';
+    }
+    return fm.elements[f.n].value.trim();
+  }
+
+  function collect(fm) {
+    var sections = [];
+    pages.forEach(function (pg) {
+      pg.secs.forEach(function (sec) {
+        var items = [];
+        sec[1].forEach(function (f) {
+          var v = getVal(fm, f);
+          if (v) items.push([f.l, v]);
+        });
+        if (items.length) sections.push({ title: sec[0], items: items });
+      });
+    });
+    var conf = [];
+    if (fm.elements.signature.value.trim()) conf.push(['امضا', fm.elements.signature.value.trim()]);
+    if (fm.elements.date.value) conf.push(['تاریخ', fm.elements.date.value]);
+    if (conf.length) sections.push({ title: 'تأیید', items: conf });
+    return sections;
+  }
+
+  // validation + submit
+  var required = [
+    ['first', 'نام را وارد کنید'],
+    ['last', 'نام خانوادگی را وارد کنید'],
+    ['email', 'ایمیل معتبر وارد کنید'],
+    ['phone', 'شماره تلفن را وارد کنید'],
+    ['signature', 'امضا لازم است']
+  ];
+
+  var currentDoc = null;
+
+  $('submit').onclick = function () {
+    var fm = $('form');
+    Array.prototype.forEach.call(document.querySelectorAll('.f.bad'), function (x) { x.classList.remove('bad'); });
+    var firstBad = null;
+    required.forEach(function (item) {
+      var el = fm.elements[item[0]];
+      var v = el.value.trim();
+      var ok = !!v;
+      if (item[0] === 'email') ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+      if (!ok) {
+        var f = el.closest('.f');
+        f.classList.add('bad');
+        f.querySelector('.msg').textContent = item[1];
+        if (!firstBad) firstBad = el;
+      }
+    });
+    if (firstBad) {
+      show(firstBad.closest('section').id === 'p0' ? 0 : 1);
+      firstBad.focus();
+      return;
+    }
+
+    // پنجرهٔ جدید باید همین‌جا (هم‌زمان با کلیک) باز شود تا کروم آن را مسدود نکند
+    var w = null;
+    if (!isMobile) {
+      try { w = window.open('', '_blank'); } catch (err) { w = null; }
+    }
+    if (w) {
+      w.document.write('<!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><title>فرم شما</title></head>' +
+        '<body style="background:#000;color:#e1ad01;font-family:Tahoma,sans-serif;padding:30px">در حال آماده‌سازی...</body></html>');
+    }
+
+    readPhoto(fm.elements.photo.files[0], function (photo) {
+      currentDoc = { sections: collect(fm), photo: photo, stamp: new Date().toLocaleString('fa-IR') };
+      var photoSrc = photo ? 'data:image/jpeg;base64,' + photo.base64 : '';
+
+      if (w && !w.closed) {
+        var wordHtml = wordWrap(buildBody(currentDoc, photo ? 'photo.jpg' : ''));
+        var href = 'data:application/msword;base64,' + toB64(buildMhtml(wordHtml, photo));
+        w.document.open();
+        w.document.write(resultPage(buildBody(currentDoc, photoSrc), href));
+        w.document.close();
+      } else {
+        // اگر مرورگر پنجرهٔ جدید را مسدود کرد، همان پنجرهٔ داخل صفحه نشان داده می‌شود
+        $('preview').innerHTML = buildBody(currentDoc, photoSrc);
+        $('dlg').showModal();
+      }
+    });
+  };
+
+  // صفحهٔ کامل پنجرهٔ جدید
+  function resultPage(bodyHtml, href) {
+    var css = 'body{margin:0;background:#000;color:#e1ad01;font-family:Vazirmatn,Tahoma,sans-serif;line-height:1.7}' +
+      '.top{max-width:860px;margin:0 auto;padding:20px 16px 8px}' +
+      '.top h1{margin:0 0 6px;font-size:1.5rem}' +
+      '.btns{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 16px}' +
+      '.btn{font:inherit;font-weight:800;padding:8px 22px;border:1.5px solid #e1ad01;background:#e1ad01;color:#000;border-radius:6px;cursor:pointer;text-decoration:none;display:inline-block}' +
+      '.btn.alt{background:transparent;color:#e1ad01}' +
+      '.paper{max-width:860px;margin:0 auto 40px;background:#fff;color:#111;padding:28px 32px;border-radius:4px;line-height:1.9}' +
+      '.paper h1{text-align:center;font-size:1.4rem;margin:0 0 10px}' +
+      '.paper h2{font-size:1.1rem;border-bottom:2px solid #333;margin:18px 0 8px}' +
+      '.paper table{border-collapse:collapse;width:100%}' +
+      '.paper td{border:1px solid #999;padding:6px 8px;vertical-align:top}' +
+      '.paper td.k{background:#eee;width:38%;font-weight:700}' +
+      '.paper img{border:1px solid #999}';
+    return '<!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="utf-8">' +
+      '<meta name="viewport" content="width=device-width, initial-scale=1">' +
+      '<title>فرم شما</title>' +
+      '<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;800&display=swap" rel="stylesheet">' +
+      '<style>' + css + '</style></head><body>' +
+      '<div class="top"><h1>فرم شما</h1>' +
+      '<div class="btns"><a class="btn" id="dl" download="partner-form.doc" href="' + href + '">دانلود فایل Word</a>' +
+      '<button class="btn alt" type="button" onclick="window.close()">بستن</button></div></div>' +
+      '<div class="paper">' + bodyHtml + '</div></body></html>';
+  }
+
+  // دانلود فایل Word
+  $('download').onclick = function () {
+    if (!currentDoc) return;
+    var photo = currentDoc.photo;
+    var html = wordWrap(buildBody(currentDoc, photo ? 'photo.jpg' : ''));
+    var blob = new Blob([buildMhtml(html, photo)], { type: 'application/msword' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'partner-form.doc';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+  };
+
+  // عکس را کوچک می‌کند (حداکثر ۱۰۰۰ پیکسل) تا ارسالش سریع باشد
+  function readPhoto(file, done) {
+    if (!file) { done(null); return; }
+    var reader = new FileReader();
+    reader.onerror = function () { done(null); };
+    reader.onload = function () {
+      var img = new Image();
+      img.onerror = function () { done(null); };
+      img.onload = function () {
+        var max = 1000;
+        var scale = Math.min(1, max / Math.max(img.width, img.height));
+        var canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        var url = canvas.toDataURL('image/jpeg', 0.8);
+        done({ name: 'photo.jpg', type: 'image/jpeg', base64: url.split(',')[1] });
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  $('close').onclick = function () { $('dlg').close(); };
+});
+</script>
+</body>
+</html>
